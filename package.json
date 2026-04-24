@@ -1,0 +1,41 @@
+{
+  "name": "@zeelabs/openclaw-postzee",
+  "version": "1.0.0",
+  "description": "Postzee plugin for OpenClaw — Generate AI images/videos and post to 30+ social media platforms",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "openclaw": {
+    "extensions": ["./dist/index.js"],
+    "compat": {
+      "pluginApi": ">=2026.3.24-beta.2",
+      "minGatewayVersion": "2026.3.24-beta.2"
+    }
+  },
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "postzee",
+    "social-media",
+    "ai",
+    "image-generation",
+    "video-generation",
+    "mcp"
+  ],
+  "author": "Zee Labs LLC",
+  "license": "MIT",
+  "homepage": "https://postzee.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zeelabs/postzee-openclaw-plugin"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  },
+  "peerDependencies": {
+    "openclaw": "*"
+  }
+}

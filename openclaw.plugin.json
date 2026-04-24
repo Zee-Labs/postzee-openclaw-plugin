@@ -1,0 +1,16 @@
+{
+  "id": "postzee",
+  "name": "Postzee — AI Social Media Studio",
+  "description": "Generate AI images/videos and post to 30+ social media platforms. Powered by Postzee.",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKey": {
+        "type": "string",
+        "description": "Your Postzee API key. Get it at https://app.postzee.app → Settings → API"
+      }
+    },
+    "required": ["apiKey"],
+    "additionalProperties": false
+  }
+}
