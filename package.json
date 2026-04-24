@@ -1,6 +1,6 @@
 {
   "name": "@zeelabs/openclaw-postzee",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Postzee plugin for OpenClaw — Generate AI images/videos and post to 30+ social media platforms",
   "type": "module",
   "main": "dist/index.js",

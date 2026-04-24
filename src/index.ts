@@ -76,8 +76,7 @@ export default definePluginEntry({
       async execute(_id: string, _params: any, ctx: any) {
         const auth = getApiKey(ctx);
         if ("error" in auth) return auth.error;
-        // Public API: use copilot credits endpoint (accepts API key auth)
-        const data = await callPostzee(auth.key, "/copilot/credits");
+        const data = await callPostzee(auth.key, "/public/v1/credits");
         return { details: null, content: [{ type: "text", text: JSON.stringify(data) }] };
       },
     });
@@ -127,7 +126,7 @@ export default definePluginEntry({
       async execute(_id: string, params: any, ctx: any) {
         const auth = getApiKey(ctx);
         if ("error" in auth) return auth.error;
-        const data = await callPostzee(auth.key, "/copilot/enhance-prompt", "POST", {
+        const data = await callPostzee(auth.key, "/public/v1/enhance-prompt", "POST", {
           prompt: params.prompt,
           mediaType: params.mediaType,
           ...(params.model ? { model: params.model } : {}),
