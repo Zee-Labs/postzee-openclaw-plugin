@@ -15,7 +15,7 @@ async function callPostzee(
 ): Promise<unknown> {
   const url = `${API_BASE}${endpoint}`;
   const headers: Record<string, string> = {
-    Authorization: `Bearer ${apiKey}`,
+    Authorization: apiKey,
     "Content-Type": "application/json",
   };
 
