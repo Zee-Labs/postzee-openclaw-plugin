@@ -10,6 +10,9 @@
   },
   "openclaw": {
     "extensions": ["./dist/index.js"],
+    "build": {
+      "openclawVersion": "2026.3.24-beta.2"
+    },
     "compat": {
       "pluginApi": ">=2026.3.24-beta.2",
       "minGatewayVersion": "2026.3.24-beta.2"
