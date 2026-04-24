@@ -4,8 +4,8 @@ import { Type } from "@sinclair/typebox";
 const API_BASE = "https://api.postzee.app";
 
 /**
- * Helper to call the Postzee MCP-compatible REST API.
- * Uses the API key from plugin config to authenticate.
+ * Call the Postzee Public API.
+ * Auth via API key in the Authorization header.
  */
 async function callPostzee(
   apiKey: string,
@@ -33,98 +33,88 @@ async function callPostzee(
   return res.json();
 }
 
-/**
- * Poll a job until it completes or fails.
- */
-async function pollJob(
-  apiKey: string,
-  jobId: string,
-  maxAttempts = 60,
-  intervalMs = 5000
-): Promise<Record<string, unknown>> {
-  for (let i = 0; i < maxAttempts; i++) {
-    const result = (await callPostzee(
-      apiKey,
-      `/public/v1/jobs/${jobId}/status`
-    )) as Record<string, unknown>;
-
-    if (result.status === "success" || result.status === "failed") {
-      return result;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+/** Helper: extract API key from plugin config or return error content */
+function getApiKey(ctx: any): { key: string } | { error: any } {
+  const apiKey = ctx.config?.apiKey;
+  if (!apiKey) {
+    return {
+      error: {
+        details: null,
+        content: [{ type: "text", text: "Error: Postzee API key not configured. Set it in plugin config (Settings → Plugins → postzee → apiKey)." }],
+      },
+    };
   }
-
-  return { status: "timeout", jobId };
+  return { key: apiKey };
 }
 
 export default definePluginEntry({
   id: "postzee",
   name: "Postzee — AI Social Media Studio",
+  description: "Generate AI images/videos and post to 30+ social media platforms",
 
   register(api) {
     // ── List Channels ──
     api.registerTool({
       name: "postzee_list_channels",
-      description:
-        "List connected social media channels in the user's Postzee account",
+      label: "List Channels",
+      description: "List connected social media channels in the user's Postzee account",
       parameters: Type.Object({}),
-      async execute(_id, _params, ctx) {
-        const apiKey = ctx.config?.apiKey as string;
-        if (!apiKey) return { content: [{ type: "text", text: "Error: Postzee API key not configured. Set it in plugin config." }] };
-
-        const data = await callPostzee(apiKey, "/public/v1/integrations");
-        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+      async execute(_id: string, _params: any, ctx: any) {
+        const auth = getApiKey(ctx);
+        if ("error" in auth) return auth.error;
+        const data = await callPostzee(auth.key, "/public/v1/integrations");
+        return { details: null, content: [{ type: "text", text: JSON.stringify(data) }] };
       },
     });
 
     // ── Get Credits ──
     api.registerTool({
       name: "postzee_get_credits",
+      label: "Get Credits",
       description: "Check available AI credit balance",
       parameters: Type.Object({}),
-      async execute(_id, _params, ctx) {
-        const apiKey = ctx.config?.apiKey as string;
-        if (!apiKey) return { content: [{ type: "text", text: "Error: API key not configured." }] };
-
-        const data = await callPostzee(apiKey, "/credits/balance");
-        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+      async execute(_id: string, _params: any, ctx: any) {
+        const auth = getApiKey(ctx);
+        if ("error" in auth) return auth.error;
+        // Public API: use copilot credits endpoint (accepts API key auth)
+        const data = await callPostzee(auth.key, "/copilot/credits");
+        return { details: null, content: [{ type: "text", text: JSON.stringify(data) }] };
       },
     });
 
     // ── List Image Models ──
     api.registerTool({
       name: "postzee_list_image_models",
+      label: "List Image Models",
       description: "List available AI image generation models with costs",
       parameters: Type.Object({}),
-      async execute(_id, _params, ctx) {
-        const apiKey = ctx.config?.apiKey as string;
-        if (!apiKey) return { content: [{ type: "text", text: "Error: API key not configured." }] };
-
-        const data = await callPostzee(apiKey, "/public/v1/image-models");
-        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+      async execute(_id: string, _params: any, ctx: any) {
+        const auth = getApiKey(ctx);
+        if ("error" in auth) return auth.error;
+        const data = await callPostzee(auth.key, "/public/v1/image-models");
+        return { details: null, content: [{ type: "text", text: JSON.stringify(data) }] };
       },
     });
 
     // ── List Video Models ──
     api.registerTool({
       name: "postzee_list_video_models",
+      label: "List Video Models",
       description: "List available AI video generation models with costs",
       parameters: Type.Object({}),
-      async execute(_id, _params, ctx) {
-        const apiKey = ctx.config?.apiKey as string;
-        if (!apiKey) return { content: [{ type: "text", text: "Error: API key not configured." }] };
-
-        const data = await callPostzee(apiKey, "/public/v1/video-models");
-        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+      async execute(_id: string, _params: any, ctx: any) {
+        const auth = getApiKey(ctx);
+        if ("error" in auth) return auth.error;
+        const data = await callPostzee(auth.key, "/public/v1/video-models");
+        return { details: null, content: [{ type: "text", text: JSON.stringify(data) }] };
       },
     });
 
     // ── Enhance Prompt ──
     api.registerTool({
       name: "postzee_enhance_prompt",
-      description:
-        "Optimize a user prompt for dramatically better AI image/video generation results",
+      label: "Enhance Prompt",
+      description: "Optimize a user prompt for dramatically better AI image/video generation results",
       parameters: Type.Object({
         prompt: Type.String({ description: "The user prompt to optimize" }),
         mediaType: Type.Union([Type.Literal("image"), Type.Literal("video")], {
@@ -134,45 +124,43 @@ export default definePluginEntry({
           Type.String({ description: "Target AI model ID for model-specific optimization" })
         ),
       }),
-      async execute(_id, params, ctx) {
-        const apiKey = ctx.config?.apiKey as string;
-        if (!apiKey) return { content: [{ type: "text", text: "Error: API key not configured." }] };
-
-        const data = await callPostzee(apiKey, "/copilot/enhance-prompt", "POST", {
+      async execute(_id: string, params: any, ctx: any) {
+        const auth = getApiKey(ctx);
+        if ("error" in auth) return auth.error;
+        const data = await callPostzee(auth.key, "/copilot/enhance-prompt", "POST", {
           prompt: params.prompt,
           mediaType: params.mediaType,
           ...(params.model ? { model: params.model } : {}),
         });
-        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+        return { details: null, content: [{ type: "text", text: JSON.stringify(data) }] };
       },
     });
 
     // ── Generate Image ──
     api.registerTool({
       name: "postzee_generate_image",
-      description:
-        "Generate an AI image. Returns a jobId — use postzee_check_job to poll for completion.",
+      label: "Generate Image",
+      description: "Generate an AI image. Returns a jobId — use postzee_check_job to poll for completion.",
       parameters: Type.Object({
         prompt: Type.String({ description: "Detailed description of the image" }),
         model: Type.String({ description: "Model ID from postzee_list_image_models" }),
       }),
-      async execute(_id, params, ctx) {
-        const apiKey = ctx.config?.apiKey as string;
-        if (!apiKey) return { content: [{ type: "text", text: "Error: API key not configured." }] };
-
-        const data = await callPostzee(apiKey, "/public/v1/generate-image", "POST", {
+      async execute(_id: string, params: any, ctx: any) {
+        const auth = getApiKey(ctx);
+        if ("error" in auth) return auth.error;
+        const data = await callPostzee(auth.key, "/public/v1/generate-image", "POST", {
           prompt: params.prompt,
           model: params.model,
         });
-        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+        return { details: null, content: [{ type: "text", text: JSON.stringify(data) }] };
       },
     });
 
     // ── Generate Video ──
     api.registerTool({
       name: "postzee_generate_video",
-      description:
-        "Generate an AI video. Returns a jobId — use postzee_check_job to poll for completion.",
+      label: "Generate Video",
+      description: "Generate an AI video. Returns a jobId — use postzee_check_job to poll for completion.",
       parameters: Type.Object({
         prompt: Type.String({ description: "Detailed description of the video" }),
         model: Type.String({ description: "Model ID from postzee_list_video_models" }),
@@ -181,41 +169,40 @@ export default definePluginEntry({
           Type.String({ description: 'Aspect ratio (e.g., "16:9", "9:16"). Default: "16:9"' })
         ),
       }),
-      async execute(_id, params, ctx) {
-        const apiKey = ctx.config?.apiKey as string;
-        if (!apiKey) return { content: [{ type: "text", text: "Error: API key not configured." }] };
-
-        const data = await callPostzee(apiKey, "/public/v1/generate-video-ai", "POST", {
+      async execute(_id: string, params: any, ctx: any) {
+        const auth = getApiKey(ctx);
+        if ("error" in auth) return auth.error;
+        const data = await callPostzee(auth.key, "/public/v1/generate-video-ai", "POST", {
           prompt: params.prompt,
           model: params.model,
           ...(params.duration ? { duration: params.duration } : {}),
           aspectRatio: params.aspectRatio || "16:9",
         });
-        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+        return { details: null, content: [{ type: "text", text: JSON.stringify(data) }] };
       },
     });
 
     // ── Check Job ──
     api.registerTool({
       name: "postzee_check_job",
+      label: "Check Job Status",
       description: "Check the status of an AI generation job. Poll until status is 'success' or 'failed'.",
       parameters: Type.Object({
         jobId: Type.String({ description: "Job ID from postzee_generate_image or postzee_generate_video" }),
       }),
-      async execute(_id, params, ctx) {
-        const apiKey = ctx.config?.apiKey as string;
-        if (!apiKey) return { content: [{ type: "text", text: "Error: API key not configured." }] };
-
-        const data = await callPostzee(apiKey, `/public/v1/jobs/${params.jobId}/status`);
-        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+      async execute(_id: string, params: any, ctx: any) {
+        const auth = getApiKey(ctx);
+        if ("error" in auth) return auth.error;
+        const data = await callPostzee(auth.key, `/public/v1/jobs/${params.jobId}/status`);
+        return { details: null, content: [{ type: "text", text: JSON.stringify(data) }] };
       },
     });
 
     // ── Create Post ──
     api.registerTool({
       name: "postzee_create_post",
-      description:
-        "Create or schedule a social media post on a connected channel",
+      label: "Create Post",
+      description: "Create or schedule a social media post on a connected channel",
       parameters: Type.Object({
         type: Type.Union([Type.Literal("draft"), Type.Literal("schedule")], {
           description: '"schedule" to publish now or at date, "draft" to save',
@@ -231,11 +218,10 @@ export default definePluginEntry({
           })
         ),
       }),
-      async execute(_id, params, ctx) {
-        const apiKey = ctx.config?.apiKey as string;
-        if (!apiKey) return { content: [{ type: "text", text: "Error: API key not configured." }] };
-
-        const data = await callPostzee(apiKey, "/public/v1/posts", "POST", {
+      async execute(_id: string, params: any, ctx: any) {
+        const auth = getApiKey(ctx);
+        if ("error" in auth) return auth.error;
+        const data = await callPostzee(auth.key, "/public/v1/posts", "POST", {
           date: params.date,
           type: params.type,
           posts: [
@@ -246,7 +232,7 @@ export default definePluginEntry({
             },
           ],
         });
-        return { content: [{ type: "text", text: JSON.stringify(data) }] };
+        return { details: null, content: [{ type: "text", text: JSON.stringify(data) }] };
       },
     });
   },

@@ -7,7 +7,7 @@
     "properties": {
       "apiKey": {
         "type": "string",
-        "description": "Your Postzee API key. Get it at https://app.postzee.app → Settings → API"
+        "description": "Your Postzee API Key (NOT the MCP URL). Get it at dashboard.postzee.app → Settings → Public API → click Reveal"
       }
     },
     "required": ["apiKey"],

@@ -30,7 +30,10 @@
   "homepage": "https://postzee.app",
   "repository": {
     "type": "git",
-    "url": "https://github.com/zeelabs/postzee-openclaw-plugin"
+    "url": "https://github.com/Zee-Labs/postzee-openclaw-plugin"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.0"
   },
   "devDependencies": {
     "typescript": "^5.7.0"

@@ -6,11 +6,12 @@ Generate AI images/videos and post to 30+ social media platforms from your OpenC
 
 ```bash
 openclaw plugins install @zeelabs/openclaw-postzee
+openclaw gateway restart
 ```
 
 ## Configuration
 
-After installing, configure your API key:
+After installing, add your API key to the plugin config:
 
 ```json
 {
@@ -27,16 +28,19 @@ After installing, configure your API key:
 }
 ```
 
-Then restart the gateway:
-```bash
-openclaw gateway restart
-```
+Then restart: `openclaw gateway restart`
 
-Get your API key at: [app.postzee.app](https://app.postzee.app) → Settings → API
+## Where to find your API Key
+
+1. Go to [dashboard.postzee.app/settings/account/api](https://dashboard.postzee.app/settings/account/api/)
+2. Navigate to **Settings** → **Public API** tab
+3. Copy the **API Key** (the first field — click "Reveal" to see the full key)
+
+> **Important:** Copy only the API Key, NOT the MCP URL below it.
 
 ## What You Can Do
 
-- **"Generate an image of a sunset over the ocean"** — creates a stunning AI image
+- **"Generate an image of a cat surfing at sunset"** — creates an AI image
 - **"Create a video of coffee being poured"** — generates an AI video
 - **"Post this to my Instagram and LinkedIn"** — publishes to connected channels
 - **"How many credits do I have?"** — checks your balance
@@ -63,6 +67,7 @@ Get your API key at: [app.postzee.app](https://app.postzee.app) → Settings →
 
 ## Links
 
-- [Postzee](https://postzee.app)
-- [Dashboard](https://app.postzee.app)
-- [Support](mailto:support@postzee.app)
+- [Postzee](https://postzee.app) — Platform
+- [Dashboard](https://dashboard.postzee.app) — Your account
+- [API Key](https://dashboard.postzee.app/settings/account/api/) — Get your key
+- [Support](mailto:support@postzee.app) — Help
